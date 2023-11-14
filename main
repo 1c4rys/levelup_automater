@@ -1,0 +1,107 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+using namespace std;
+
+int xpRequired[20] = {14, 16, 19, 23, 28, 34, 41, 49, 58, 68, 79, 91, 104, 118, 133, 149, 166, 184, 203, 223};
+
+void readData(vector<int>& totalxp, vector<int>& level, const string& filename) {
+    ifstream inFile(filename);
+    if (!inFile) {
+        cerr << "Error opening file for reading. Initializing new data." << endl;
+        totalxp.assign(7, 0);
+        level.assign(7, 1);
+        return;
+    }
+
+    for (int i = 0; i < 7; ++i) {
+        inFile >> totalxp[i] >> level[i];
+    }
+
+    inFile.close();
+}
+
+void writeData(const vector<int>& totalxp, const vector<int>& level, const string& filename) {
+    ofstream outFile(filename);
+    if (!outFile) {
+        cerr << "Error opening file for writing." << endl;
+        return;
+    }
+
+    for (int i = 0; i < 7; ++i) {
+        outFile << totalxp[i] << " " << level[i] << endl;
+    }
+
+    outFile.close();
+}
+
+void outputTotal(const vector<int>& totalxp, const vector<int>& level) {
+    cout << "Current xp and levels: \n";
+    cout << "\tGoobert: " << totalxp[0] << " XP, Level " << level[0] << "\n";
+    cout << "\tKoart: " << totalxp[1] << " XP, Level " << level[1] << "\n";
+    cout << "\tKyrie: " << totalxp[2] << " XP, Level " << level[2] << "\n";
+    cout << "\tMug Mug: " << totalxp[3] << " XP, Level " << level[3] << "\n";
+    cout << "\tScrap: " << totalxp[4] << " XP, Level " << level[4] << "\n";
+    cout << "\tTyrmorn: " << totalxp[5] << " XP, Level " << level[5] << "\n";
+    cout << "\tVulkub: " << totalxp[6] << " XP, Level " << level[6] << "\n";
+}
+
+int main() {
+    string input;
+    int inputOther;
+    vector<int> numbers;
+
+    string filename = "character_data.txt";
+    vector<int> totalxp(7, 0), level(7, 1);
+    readData(totalxp, level, filename);
+
+    cout << "Which character(s)?: \n";
+    cout << "1.) Goobert/Brody\n";
+    cout << "2.) Koart/Carson\n";
+    cout << "3.) Kyrie/Andrew\n";
+    cout << "4.) Mug Mug/Justin\n";
+    cout << "5.) Scrap/Lars\n";
+    cout << "6.) Tyrmorn/Jayme\n";
+    cout << "7.) Vulkub/Evan\n";
+    cout << "8.) Everyone\n";
+    cout << "9.) Output XP Total\n";
+    getline(cin, input);
+
+    if(input == "9") {
+        outputTotal(totalxp, level);
+        return 0;
+    }
+
+    cout << "+1 level (1), or +2 level (2)?\n";
+    cin >> inputOther;
+    cin.ignore(); // To consume the newline character after cin
+
+    stringstream ss(input);
+    string token;
+    while (getline(ss, token, ',')) {
+        size_t start = token.find_first_not_of(" ");
+        token = (start == string::npos) ? "" : token.substr(start);
+        numbers.push_back(stoi(token));
+    }
+
+    for (int i = 0; i < numbers.size(); i++) {
+        if (numbers[i] >= 1 && numbers[i] <= 7) {
+            int charIndex = numbers[i] - 1;
+            int requiredXP = inputOther == 2 ? (int)(xpRequired[level[charIndex] - 1] * 1.5) : xpRequired[level[charIndex] - 1];
+            if (totalxp[charIndex] >= requiredXP) {
+                totalxp[charIndex] -= requiredXP;
+                level[charIndex] += inputOther;
+                cout << "Character " << numbers[i] << " leveled up to level " << level[charIndex] << endl;
+            } else {
+                cout << "Not enough XP to level up character " << numbers[i] << ". Required: " << requiredXP << ", Available: " << totalxp[charIndex] << endl;
+            }
+        }
+    }
+
+    outputTotal(totalxp, level);
+    writeData(totalxp, level, filename);
+
+    return 0;
+}
